@@ -54,6 +54,18 @@ forAppWithProcessID:(pid_t)processID
 - (BGMAppVolumeAndPan) getVolumeAndPanForApp:(NSRunningApplication *)app;
 - (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app;
 
+// Return an array of dictionaries with keys: @"uid" (NSString) and @"name" (NSString).
+- (NSArray<NSDictionary*>*) outputDeviceList;
+
+// Request that the given app's audio be routed to the device with the given UID. Pass nil to
+// clear any mapping. This sends the mapping to the driver.
+- (void) setOutputDeviceUID:(NSString* __nullable)uid
+         forAppWithProcessID:(pid_t)processID
+                    bundleID:(NSString* __nullable)bundleID;
+
+// Return the current output device UID (if any) for the given app by querying BGMDevice.
+- (NSString* __nullable) getOutputDeviceUIDForApp:(NSRunningApplication*)app;
+
 @end
 
 #pragma clang assume_nonnull end

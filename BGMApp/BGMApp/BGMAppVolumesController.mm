@@ -145,6 +145,35 @@
     return volumeAndPan;
 }
 
+- (NSString* __nullable) getOutputDeviceUIDForApp:(NSRunningApplication*)app {
+    CACFArray volumesFromBGMDevice([audioDevices bgmDevice].GetAppVolumes(), false);
+
+    for (UInt32 i = 0; i < volumesFromBGMDevice.GetNumberItems(); i++) {
+        CACFDictionary appVolume(false);
+        volumesFromBGMDevice.GetCACFDictionary(i, appVolume);
+
+        CACFString bundleID;
+        bundleID.DontAllowRelease();
+        appVolume.GetCACFString(CFSTR(kBGMAppVolumesKey_BundleID), bundleID);
+
+        pid_t pid;
+        appVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), pid);
+
+        if ((app.processIdentifier == pid) ||
+            [app.bundleIdentifier isEqualToString:(__bridge NSString*)bundleID.GetCFString()]) {
+            // Found a match - get output device UID if present.
+            CACFString outUID;
+            outUID.DontAllowRelease();
+            if (appVolume.GetCACFString(CFSTR(kBGMAppVolumesKey_OutputDeviceUID), outUID)) {
+                return (__bridge_transfer NSString*)outUID.GetCFString();
+            }
+            break;
+        }
+    }
+
+    return nil;
+}
+
 - (BOOL) shouldBeIncludedInMenu:(NSRunningApplication*)app {
     // Ignore hidden apps and Background Music itself.
     // TODO: Would it be better to only show apps that are registered as HAL clients?
@@ -212,6 +241,46 @@ forAppWithProcessID:(pid_t)processID
     audioDevices.bgmDevice.SetAppPanPosition(pan,
                                              processID,
                                              (__bridge_retained CFStringRef)bundleID);
+}
+
+- (NSArray<NSDictionary*>*) outputDeviceList {
+    NSMutableArray<NSDictionary*>* list = [NSMutableArray array];
+
+    CAHALAudioSystemObject audioSystem;
+    UInt32 numDevices = audioSystem.GetNumberAudioDevices();
+
+    CAAutoArrayDelete<AudioObjectID> devices(numDevices);
+    audioSystem.GetAudioDevices(numDevices, devices);
+
+    for (UInt32 i = 0; i < numDevices; i++) {
+        BGMAudioDevice device(devices[i]);
+
+        if (device.CanBeOutputDeviceInBGMApp()) {
+            NSString* uid = nil;
+            NSString* name = nil;
+
+            BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+                uid = (__bridge_transfer NSString* __nullable)CAHALAudioDevice(devices[i]).CopyDeviceUID();
+                name = (__bridge_transfer NSString* __nullable)CAHALAudioDevice(devices[i]).CopyName();
+            });
+
+            if (uid && name) {
+                [list addObject:@{ @"uid": uid, @"name": name }];
+            }
+        }
+    }
+
+    return list;
+}
+
+- (void) setOutputDeviceUID:(NSString* __nullable)uid
+         forAppWithProcessID:(pid_t)processID
+                    bundleID:(NSString* __nullable)bundleID
+{
+    // Send mapping to device. Bridge to CFStringRef. Passing nil is allowed.
+    audioDevices.bgmDevice.SetAppOutputDeviceUID(uid ? (__bridge_retained CFStringRef)uid : nullptr,
+                                                 processID,
+                                                 (__bridge_retained CFStringRef)bundleID);
 }
 
 #pragma mark KVO

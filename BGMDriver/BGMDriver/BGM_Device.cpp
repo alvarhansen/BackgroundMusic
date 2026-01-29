@@ -1067,6 +1067,16 @@ static void ValidateAppVolumesProperty(const CACFArray& inAppVolumes)
                     CAException(kAudioHardwareIllegalOperationError),
                     "BGM_Device::ValidateAppVolumesProperty: PanPosition out of range");
         }
+
+        // Check OutputDeviceUID. Must be a CFString if present.
+        CFTypeRef theOutUID = nullptr;
+        bool hasOutUID = theDict.GetCFType(CFSTR(kBGMAppVolumesKey_OutputDeviceUID), theOutUID);
+        if (hasOutUID && theOutUID != nullptr)
+        {
+            ThrowIf(CFGetTypeID(theOutUID) != CFStringGetTypeID(),
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGM_Device::ValidateAppVolumesProperty: OutputDeviceUID is not a CFString");
+        }
     }
 }
 

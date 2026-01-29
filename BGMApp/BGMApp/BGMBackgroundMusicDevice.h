@@ -120,6 +120,18 @@ public:
                                           pid_t inAppProcessID,
                                           CFStringRef __nullable inAppBundleID);
 
+    /*!
+     Set the output device UID requested for an app. The UID is optional; pass null to omit.
+     This value will be sent to the driver as part of the app volumes property so the driver
+     or app-side playthrough code can use it to route audio per-app.
+
+     @throws CAException If the HAL returns an error when this function sends the change to
+                         BGMDevice.
+     */
+    void                SetAppOutputDeviceUID(CFStringRef __nullable inOutputDeviceUID,
+                                              pid_t inAppProcessID,
+                                              CFStringRef __nullable inAppBundleID);
+
 private:
     void                SendAppVolumeOrPanToBGMDevice(SInt32 inNewValue,
                                                       CFStringRef inVolumeTypeKey,

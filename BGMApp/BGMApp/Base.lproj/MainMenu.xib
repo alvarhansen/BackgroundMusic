@@ -99,6 +99,11 @@
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="6QQ-oO-HxF"/>
                 </imageView>
+                <popUpButton translatesAutoresizingMaskIntoConstraints="NO" id="OUT-PU-1" customClass="BGMAVM_OutputDevicePopup">
+                    <rect key="frame" x="63" y="27" width="90" height="16"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <cell key="cell" id="OUT-PU-1-cell"/>
+                </popUpButton>
                 <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I1l-Ci-4md" customClass="BGMAVM_VolumeSlider">
                     <rect key="frame" x="163" y="27" width="74" height="15"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>

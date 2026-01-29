@@ -201,6 +201,43 @@ void BGMBackgroundMusicDevice::SendAppVolumeOrPanToBGMDevice(SInt32 inNewValue,
     mUISoundsBGMDevice.SetPropertyData_CFType(kBGMAppVolumesAddress, changesPList);
 }
 
+    void BGMBackgroundMusicDevice::SetAppOutputDeviceUID(CFStringRef __nullable inOutputDeviceUID,
+                                                        pid_t inAppProcessID,
+                                                        CFStringRef __nullable inAppBundleID)
+    {
+        CACFArray appVolumeChanges(true);
+
+        auto addOutputDeviceChange = [&] (pid_t pid, CFStringRef bundleID)
+        {
+            CACFDictionary appVolumeChange(true);
+
+            appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), pid);
+            appVolumeChange.AddString(CFSTR(kBGMAppVolumesKey_BundleID), bundleID);
+            if (inOutputDeviceUID) {
+                appVolumeChange.AddString(CFSTR(kBGMAppVolumesKey_OutputDeviceUID), inOutputDeviceUID);
+            }
+
+            appVolumeChanges.AppendDictionary(appVolumeChange.GetDict());
+        };
+
+        addOutputDeviceChange(inAppProcessID, inAppBundleID);
+
+        // Add the same change for each process the app is responsible for.
+        for(CACFString responsibleBundleID : ResponsibleBundleIDsOf(CACFString(inAppBundleID)))
+        {
+            // Send -1 as the PID so this mapping will only ever be matched by bundle ID.
+            addOutputDeviceChange(-1, responsibleBundleID.GetCFString());
+        }
+
+        CFPropertyListRef changesPList = appVolumeChanges.AsPropertyList();
+
+        // Send the change to BGMDevice.
+        SetPropertyData_CFType(kBGMAppVolumesAddress, changesPList);
+
+        // Also send it to the instance of BGMDevice that handles UI sounds.
+        mUISoundsBGMDevice.SetPropertyData_CFType(kBGMAppVolumesAddress, changesPList);
+    }
+
 // This is a temporary solution that lets us control the volumes of some multiprocess apps, i.e.
 // apps that play their audio from a process with a different bundle ID.
 //

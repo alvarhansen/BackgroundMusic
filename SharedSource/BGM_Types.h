@@ -154,6 +154,11 @@ enum BGMDeviceAudibleState : SInt32
 // The app's bundle ID as a CFString. May be omitted if kBGMAppVolumesKey_ProcessID is present.
 #define kBGMAppVolumesKey_BundleID          "bid"
 
+// Optional key to request that a particular app's audio be routed to a specific output
+// device. The value is a CFString (device UID). This is an app-side hint; the driver may
+// ignore it if it doesn't implement per-app routing yet.
+#define kBGMAppVolumesKey_OutputDeviceUID    "outuid"
+
 // Volume curve range for app volumes
 #define kAppRelativeVolumeMaxRawValue   100
 #define kAppRelativeVolumeMinRawValue   0

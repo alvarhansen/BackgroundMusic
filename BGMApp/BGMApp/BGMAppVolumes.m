@@ -533,3 +533,66 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 }
 
 @end
+
+@implementation BGMAVM_OutputDevicePopup
+{
+    NSRunningApplication* __weak appRef;
+    BGMAppVolumesController* controllerRef;
+}
+
+- (void) setUpWithApp:(NSRunningApplication*)app
+              context:(BGMAppVolumes*)ctx
+           controller:(BGMAppVolumesController*)ctrl
+             menuItem:(NSMenuItem*)menuItem
+{
+    #pragma unused (ctx, menuItem)
+
+    appRef = app;
+    controllerRef = ctrl;
+
+    [self removeAllItems];
+
+    // Add a "System Default" / none option.
+    [self addItemWithTitle:@"System Default"]; // Clear mapping
+
+    // Populate with available output devices.
+    NSArray<NSDictionary*>* devices = [controllerRef outputDeviceList];
+    for (NSDictionary* d in devices) {
+        NSString* title = d[@"name"];
+        NSString* uid = d[@"uid"];
+        NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
+        item.representedObject = uid;
+        [self.menu addItem:item];
+    }
+
+    // Select current mapping if any.
+    NSString* currentUID = [controllerRef getOutputDeviceUIDForApp:appRef];
+    if (currentUID) {
+        for (NSMenuItem* mi in [self itemArray]) {
+            if ([mi.representedObject isKindOfClass:NSString.class] && [mi.representedObject isEqualToString:currentUID]) {
+                [self selectItem:mi];
+                break;
+            }
+        }
+    } else {
+        [self selectItemAtIndex:0];
+    }
+
+    [self setTarget:self];
+    [self setAction:@selector(outputDeviceSelected:)];
+}
+
+- (void) outputDeviceSelected:(id)sender {
+    NSString* uid = nil;
+
+    NSMenuItem* sel = [self selectedItem];
+    if (sel.representedObject && [sel.representedObject isKindOfClass:NSString.class]) {
+        uid = sel.representedObject;
+    }
+
+    if (!appRef) return;
+
+    [controllerRef setOutputDeviceUID:uid forAppWithProcessID:appRef.processIdentifier bundleID:appRef.bundleIdentifier];
+}
+
+@end
