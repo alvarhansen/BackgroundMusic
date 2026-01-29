@@ -245,9 +245,63 @@ void    BGM_ClientMap::CopyClientIntoAppVolumesArray(BGM_Client inClient, CAVolu
                                inVolumeCurve.ConvertScalarToRaw(inClient.mRelativeVolume / 4));
         theAppVolume.AddSInt32(CFSTR(kBGMAppVolumesKey_PanPosition),
                                inClient.mPanPosition);
+        // Include per-app output device UID if present
+        if(inClient.mOutputDeviceUID.IsValid()) {
+            theAppVolume.AddString(CFSTR(kBGMAppVolumesKey_OutputDeviceUID), inClient.mOutputDeviceUID.CopyCFString());
+        }
         
         ioAppVolumes.AppendDictionary(theAppVolume.GetDict());
     }
+}
+
+bool BGM_ClientMap::SetClientsOutputDeviceUID(pid_t searchKey, CACFString inOutputDeviceUID)
+{
+    bool didChange = false;
+
+    CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
+
+    auto theSetOutputUIDsInShadowMapsFunc = [&] {
+        auto theClients = GetClients(searchKey);
+        if(theClients != nullptr)
+        {
+            for(BGM_Client* theClient : *theClients)
+            {
+                theClient->mOutputDeviceUID = inOutputDeviceUID;
+                didChange = true;
+            }
+        }
+    };
+
+    theSetOutputUIDsInShadowMapsFunc();
+    SwapInShadowMaps();
+    theSetOutputUIDsInShadowMapsFunc();
+
+    return didChange;
+}
+
+bool BGM_ClientMap::SetClientsOutputDeviceUID(CACFString searchKey, CACFString inOutputDeviceUID)
+{
+    bool didChange = false;
+
+    CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
+
+    auto theSetOutputUIDsInShadowMapsFunc = [&] {
+        auto theClients = GetClients(searchKey);
+        if(theClients != nullptr)
+        {
+            for(BGM_Client* theClient : *theClients)
+            {
+                theClient->mOutputDeviceUID = inOutputDeviceUID;
+                didChange = true;
+            }
+        }
+    };
+
+    theSetOutputUIDsInShadowMapsFunc();
+    SwapInShadowMaps();
+    theSetOutputUIDsInShadowMapsFunc();
+
+    return didChange;
 }
 
 template <typename T>

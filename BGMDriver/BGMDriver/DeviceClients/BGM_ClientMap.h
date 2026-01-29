@@ -139,6 +139,11 @@ public:
     // Returns true if a client for bundle ID inAppBundleID was found and its pan position changed.
     // inAppBundleID may contain a null CFStringRef, in which case it returns false.
     bool                                                SetClientsPanPosition(CACFString inAppBundleID, SInt32 inPanPosition);
+
+    // Set the output device UID for clients matching the given PID or bundle ID. Passing an empty
+    // CACFString unsets the per-client routing and returns them to default mixing.
+    bool                                                SetClientsOutputDeviceUID(pid_t inAppPID, CACFString inOutputDeviceUID);
+    bool                                                SetClientsOutputDeviceUID(CACFString inAppBundleID, CACFString inOutputDeviceUID);
     
     void                                                StartIONonRT(UInt32 inClientID) { UpdateClientIOStateNonRT(inClientID, true); }
     void                                                StopIONonRT(UInt32 inClientID) { UpdateClientIOStateNonRT(inClientID, false); }

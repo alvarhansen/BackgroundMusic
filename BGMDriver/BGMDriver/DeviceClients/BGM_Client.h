@@ -74,6 +74,10 @@ public:
     
     // The client's pan position, in the range [-100, 100] where -100 is left and 100 is right
     SInt32                        mPanPosition = 0;
+
+    // Optional: The UID of the real output device this client's audio should be routed to.
+    // Empty/invalid CACFString means use the default routing (i.e. mixed output).
+    CACFString                    mOutputDeviceUID;
     
 };
 

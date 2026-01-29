@@ -384,6 +384,22 @@ bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
             }
         }
         
+        // Optional: per-app output device UID
+        {
+            CACFString theOutputDeviceUID;
+            theOutputDeviceUID.DontAllowRelease();
+            bool didGetOutputDeviceUID = theAppVolume.GetCACFString(CFSTR(kBGMAppVolumesKey_OutputDeviceUID), theOutputDeviceUID);
+            if(didGetOutputDeviceUID) {
+                if(mClientMap.SetClientsOutputDeviceUID(theAppPID, theOutputDeviceUID)) {
+                    didChangeAppVolumes = true;
+                }
+
+                if(mClientMap.SetClientsOutputDeviceUID(theAppBundleID, theOutputDeviceUID)) {
+                    didChangeAppVolumes = true;
+                }
+            }
+        }
+        
         ThrowIf(!didGetVolume && !didGetPanPosition,
                 BGM_InvalidClientRelativeVolumeException(),
                 "BGM_Clients::SetClientsRelativeVolumes: No volume or pan position in request");

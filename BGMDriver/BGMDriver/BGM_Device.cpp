@@ -1465,6 +1465,9 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
 												 inIOCycleInfo.mOutputTime.mSampleTime,
 												 reinterpret_cast<const Float32*>(ioMainBuffer));
             }
+            // TODO Phase B: Implement per-app audio routing. For now, we just apply volume and pan.
+            // If the client has a custom output device UID, in Phase B we would route the audio to that device
+            // instead of mixing it with other clients.
             ApplyClientRelativeVolume(inClientID, inIOBufferFrameSize, ioMainBuffer);
             break;
 
@@ -1642,6 +1645,13 @@ void	BGM_Device::ApplyClientRelativeVolume(UInt32 inClientID, UInt32 inIOBufferF
             theBuffer[i] = theAdjustedSampleClippedBelow > 1.0f ? 1.0f : theAdjustedSampleClippedBelow;
         }
     }
+}
+
+CACFString BGM_Device::GetClientOutputDeviceUIDRT(UInt32 inClientID) const
+{
+    BGM_Client theClient;
+    bool didGetClient = mClients.mClientMap.GetClientRT(inClientID, &theClient);
+    return (didGetClient ? theClient.mOutputDeviceUID : CACFString());
 }
 
 #pragma mark Accessors
